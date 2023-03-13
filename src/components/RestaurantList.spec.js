@@ -9,14 +9,17 @@ describe('RestaurantList', () => {
 
   let loadRestaurants;
 
-  function renderComponent() {
-    loadRestaurants = jest.fn().mockName('loadRestaurants');
-    render(
-      <RestaurantList
-        loadRestaurants={loadRestaurants}
-        restaurants={restaurants}
-      />
-    );
+  function renderComponent(propOverrides = {}) {
+    const props = {
+      loadRestaurants: jest.fn().mockName('loadRestaurants'),
+      loading: false,
+      restaurants,
+      ...propOverrides,
+    };
+
+    loadRestaurants = props.loadRestaurants;
+
+    render(<RestaurantList {...props} />);
   }
 
   it('loads restaurants on first render', () => {
@@ -25,10 +28,24 @@ describe('RestaurantList', () => {
     expect(loadRestaurants).toHaveBeenCalled();
   });
 
-  it('renders restaurants', () => {
-    renderComponent();
+  it('displays the loading indicator while loading', () => {
+    renderComponent({ loading: true });
 
-    expect(screen.getByText('Sushi Place')).toBeInTheDocument();
-    expect(screen.getByText('Pizza Place')).toBeInTheDocument();
+    expect(screen.getByRole('progressbar')).toBeInTheDocument();
+  });
+
+  describe('when loading succeeds', () => {
+    it('renders restaurants', () => {
+      renderComponent();
+
+      expect(screen.getByText('Sushi Place')).toBeInTheDocument();
+      expect(screen.getByText('Pizza Place')).toBeInTheDocument();
+    });
+
+    it('does not display loading indicator while not loading', () => {
+      renderComponent();
+
+      expect(screen.queryByRole('progressbar')).not.toBeInTheDocument();
+    });
   });
 });
